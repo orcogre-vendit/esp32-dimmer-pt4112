@@ -1,0 +1,41 @@
+name: Build Windows GUI
+
+on:
+  push:
+    branches: [main, master]
+    paths: ["gui/**", ".github/workflows/build-windows.yml"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        working-directory: gui
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pyinstaller
+
+      - name: Build exe
+        working-directory: gui
+        run: python -m PyInstaller --noconfirm --clean PT4112Dimmer.spec
+
+      - name: Smoke test (exe starts and exits)
+        working-directory: gui
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist\PT4112Dimmer.exe -PassThru
+          Start-Sleep -Seconds 5
+          if ($p.HasExited) { Write-Error "exe exited early with code $($p.ExitCode)"; exit 1 }
+          Stop-Process -Id $p.Id
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PT4112Dimmer-windows
+          path: gui/dist/PT4112Dimmer.exe

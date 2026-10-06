@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+build/
+dist/
+
+# OMC session/state artifacts
+.omc/
+
+# Arduino build output
+firmware/**/build/
